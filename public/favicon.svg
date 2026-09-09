@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#090D16" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded App Background -->
+  <rect width="256" height="256" rx="56" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="4"/>
+  
+  <!-- Shield of Financial Protection -->
+  <path d="M128 44 C84 44 60 62 60 108 C60 162 100 200 128 212 C156 200 196 162 196 108 C196 62 172 44 128 44 Z" 
+        fill="none" 
+        stroke="url(#shieldGrad)" 
+        stroke-width="14" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Financial Checkmark & Freedom Growth Curve -->
+  <path d="M96 128 L120 152 L164 100" 
+        fill="none" 
+        stroke="#34D399" 
+        stroke-width="14" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Upward Trend Indicator Dot -->
+  <circle cx="164" cy="100" r="5" fill="#A7F3D0" />
+</svg>
