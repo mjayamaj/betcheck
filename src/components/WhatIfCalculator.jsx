@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Target, Home, Laptop, Shield, Briefcase, GraduationCap, Plus, Trash2 } from 'lucide-react';
+import { Calculator, Target, Home, Laptop, Shield, Briefcase, GraduationCap, Plus, Trash2, TrendingUp } from 'lucide-react';
 import { formatCurrency, DEFAULT_GOALS } from '../lib/calculations';
 
 export default function WhatIfCalculator({
@@ -54,6 +54,7 @@ export default function WhatIfCalculator({
 
   // 5-year compound growth calculation at 12% per year
   const compoundFiveYears = Math.round(lossAmount * Math.pow(1 + 0.12, 5));
+  const compoundGain = Math.max(0, compoundFiveYears - lossAmount);
 
   return (
     <div className="space-y-6">
@@ -178,7 +179,7 @@ export default function WhatIfCalculator({
             <input
               type="text"
               required
-              placeholder="Goal title (e.g. Flight to visit family)"
+              placeholder="Goal Title (e.g. Emergency Fund)"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               className="bg-slate-900 text-white px-3 py-2 rounded-lg border border-slate-800 text-xs focus:outline-none focus:border-blue-500"
@@ -187,7 +188,7 @@ export default function WhatIfCalculator({
               type="number"
               required
               min="1000"
-              placeholder="Target cost (e.g. 150000)"
+              placeholder="Target Amount"
               value={newTarget}
               onChange={(e) => setNewTarget(e.target.value)}
               className="bg-slate-900 text-white px-3 py-2 rounded-lg border border-slate-800 text-xs focus:outline-none focus:border-blue-500"

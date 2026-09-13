@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sliders, Shield, Globe, Download, Upload, RotateCcw, Trash2, HeartHandshake, CheckCircle2, Palette, LogOut } from 'lucide-react';
+import { Sliders, Shield, Globe, Download, Upload, RotateCcw, Trash2, HeartHandshake, CheckCircle2, Palette, LogOut, Database, Mail, AlertCircle } from 'lucide-react';
 import { CURRENCIES } from '../lib/calculations';
 
 export default function SettingsPage({
@@ -20,23 +20,36 @@ export default function SettingsPage({
   const [weeklyLimit, setWeeklyLimit] = useState(settings?.weekly_limit || '');
   const [monthlyLimit, setMonthlyLimit] = useState(settings?.monthly_limit || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [limitError, setLimitError] = useState('');
+  const [importStatus, setImportStatus] = useState(null); // { type: 'success' | 'error', text: '' }
 
   useEffect(() => {
-    setDailyLimit(settings?.daily_limit || '');
-    setWeeklyLimit(settings?.weekly_limit || '');
-    setMonthlyLimit(settings?.monthly_limit || '');
+    setDailyLimit(settings?.daily_limit ?? '');
+    setWeeklyLimit(settings?.weekly_limit ?? '');
+    setMonthlyLimit(settings?.monthly_limit ?? '');
   }, [settings]);
 
   const handleSaveLimits = (e) => {
     e.preventDefault();
+    setLimitError('');
+
+    const d = dailyLimit !== '' ? parseFloat(dailyLimit) : null;
+    const w = weeklyLimit !== '' ? parseFloat(weeklyLimit) : null;
+    const m = monthlyLimit !== '' ? parseFloat(monthlyLimit) : null;
+
+    if ((d !== null && d < 0) || (w !== null && w < 0) || (m !== null && m < 0)) {
+      setLimitError('Spending limits cannot be negative numbers.');
+      return;
+    }
+
     onSaveSettings({
-      daily_limit: dailyLimit ? parseFloat(dailyLimit) : null,
-      weekly_limit: weeklyLimit ? parseFloat(weeklyLimit) : null,
-      monthly_limit: monthlyLimit ? parseFloat(monthlyLimit) : null,
+      daily_limit: d,
+      weekly_limit: w,
+      monthly_limit: m,
       currency,
     });
     setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setTimeout(() => setSavedSuccess(false), 3500);
   };
 
   const handleFileImport = (e) => {
@@ -47,9 +60,11 @@ export default function SettingsPage({
         try {
           const parsed = JSON.parse(event.target.result);
           onImportData(parsed);
-          alert('Data imported successfully!');
+          setImportStatus({ type: 'success', text: 'Backup data imported successfully!' });
+          setTimeout(() => setImportStatus(null), 4000);
         } catch (err) {
-          alert('Invalid JSON backup file.');
+          setImportStatus({ type: 'error', text: 'Invalid JSON backup file. Please select a valid BetCheck export.' });
+          setTimeout(() => setImportStatus(null), 4000);
         }
       };
       reader.readAsText(file);
@@ -147,6 +162,13 @@ export default function SettingsPage({
         </div>
 
         <form onSubmit={handleSaveLimits} className="space-y-4 pt-2">
+          {limitError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
+              <span>{limitError}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">
@@ -156,11 +178,15 @@ export default function SettingsPage({
                 type="number"
                 min="0"
                 step="any"
-                placeholder="e.g. 10000 (0 = no limit)"
+                placeholder="Daily limit amount"
                 value={dailyLimit}
-                onChange={(e) => setDailyLimit(e.target.value)}
+                onChange={(e) => {
+                  setLimitError('');
+                  setDailyLimit(e.target.value);
+                }}
                 className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs focus:outline-none focus:border-blue-500"
               />
+              <span className="text-[10px] text-slate-500 mt-1 block">Set 0 or empty for no limit</span>
             </div>
 
             <div>
@@ -171,11 +197,15 @@ export default function SettingsPage({
                 type="number"
                 min="0"
                 step="any"
-                placeholder="e.g. 50000 (0 = no limit)"
+                placeholder="Weekly limit amount"
                 value={weeklyLimit}
-                onChange={(e) => setWeeklyLimit(e.target.value)}
+                onChange={(e) => {
+                  setLimitError('');
+                  setWeeklyLimit(e.target.value);
+                }}
                 className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs focus:outline-none focus:border-blue-500"
               />
+              <span className="text-[10px] text-slate-500 mt-1 block">Set 0 or empty for no limit</span>
             </div>
 
             <div>
@@ -186,26 +216,30 @@ export default function SettingsPage({
                 type="number"
                 min="0"
                 step="any"
-                placeholder="e.g. 150000 (0 = no limit)"
+                placeholder="Monthly limit amount"
                 value={monthlyLimit}
-                onChange={(e) => setMonthlyLimit(e.target.value)}
+                onChange={(e) => {
+                  setLimitError('');
+                  setMonthlyLimit(e.target.value);
+                }}
                 className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs focus:outline-none focus:border-blue-500"
               />
+              <span className="text-[10px] text-slate-500 mt-1 block">Set 0 or empty for no limit</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-2">
             <div>
               {savedSuccess && (
-                <span className="text-blue-400 font-semibold text-xs flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" /> Limits updated successfully!
+                <span className="text-emerald-400 font-semibold text-xs flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" /> Guardrail limits updated successfully!
                 </span>
               )}
             </div>
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors shadow-lg shadow-blue-600/20"
+              className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors shadow-lg shadow-blue-600/20 active:scale-95"
             >
               Save Guardrails
             </button>
@@ -321,6 +355,24 @@ export default function SettingsPage({
             <span>Clear All Data</span>
           </button>
         </div>
+
+        {/* Import status notification banner */}
+        {importStatus && (
+          <div
+            className={`p-3 rounded-xl border text-xs flex items-center gap-2 mt-2 ${
+              importStatus.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : 'bg-red-500/10 border-red-500/30 text-red-300'
+            }`}
+          >
+            {importStatus.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+            )}
+            <span>{importStatus.text}</span>
+          </div>
+        )}
       </div>
 
       {/* 5. Support & Wellness Helplines */}
@@ -332,10 +384,11 @@ export default function SettingsPage({
         <p className="text-xs text-slate-300 leading-relaxed">
           Betting addiction is driven by algorithmic dopamine reward loops, not personal weakness. You are not alone, and stepping away is the single highest ROI financial decision you will ever make.
         </p>
-        <div className="text-xs text-slate-400 space-y-1 pt-1 font-mono">
-          <p>• Gamblers Anonymous: <a href="https://www.gamblersanonymous.org" target="_blank" rel="noreferrer" className="text-blue-400 underline">gamblersanonymous.org</a></p>
-          <p>• International Gambling Therapy (24/7 Live Support): <a href="https://www.gamblingtherapy.org" target="_blank" rel="noreferrer" className="text-blue-400 underline">gamblingtherapy.org</a></p>
-          <p>• Device Blocking Tools: BetBlocker (<a href="https://betblocker.org" target="_blank" rel="noreferrer" className="text-blue-400 underline">betblocker.org</a>) / Gamban</p>
+        <div className="text-xs text-slate-400 space-y-1.5 pt-1">
+          <p>• Gamblers Anonymous: <a href="https://www.gamblersanonymous.org" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">gamblersanonymous.org</a></p>
+          <p>• International Gambling Therapy (24/7 Live Support): <a href="https://www.gamblingtherapy.org" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">gamblingtherapy.org</a></p>
+          <p>• Device Blocking Tools: BetBlocker (<a href="https://betblocker.org" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">betblocker.org</a>) / Gamban (<a href="https://www.gamban.com" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">gamban.com</a>)</p>
+          <p>• Direct BetCheck Private Support: <a href="mailto:support@betcheck.app" className="text-blue-400 hover:underline font-semibold">support@betcheck.app</a></p>
         </div>
       </div>
     </div>

@@ -76,7 +76,7 @@ export default function HistoryPage({
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search platform, notes..."
+              placeholder="Search by platform, bet type, or notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-900 text-white pl-9 pr-3 py-2 rounded-xl border border-slate-800 text-xs focus:outline-none focus:border-blue-500"
@@ -145,7 +145,7 @@ export default function HistoryPage({
                 setReasonFilter('all');
                 setPlatformFilter('all');
               }}
-              className="text-blue-400 hover:underline"
+              className="text-blue-400 hover:underline font-semibold"
             >
               Reset filters
             </button>
@@ -155,14 +155,39 @@ export default function HistoryPage({
 
       {/* Entries List / Cards */}
       <div className="space-y-3">
-        {filteredEntries.length === 0 ? (
-          <div className="glass-card rounded-2xl p-12 text-center border border-slate-800 space-y-3">
-            <p className="text-slate-400 text-sm">No betting sessions match your filter criteria.</p>
+        {entries.length === 0 ? (
+          <div className="glass-card rounded-3xl p-10 text-center border border-slate-800 space-y-4 max-w-xl mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center mx-auto">
+              <Calendar className="w-6 h-6 stroke-[1.8]" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">No Sessions Logged Yet</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                Your private log is clean. When an impulse arises or a bet is placed, record it honestly to reveal cumulative spending habits.
+              </p>
+            </div>
             <button
               onClick={onOpenLogModal}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-600/25 inline-flex items-center gap-2 active:scale-95"
             >
-              Log a Session
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Log Your First Session</span>
+            </button>
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="glass-card rounded-2xl p-10 text-center border border-slate-800 space-y-3 max-w-lg mx-auto">
+            <p className="text-slate-300 text-sm font-semibold">No betting sessions match your filter criteria.</p>
+            <p className="text-xs text-slate-500">Try changing your search terms or resetting the outcome/platform filters.</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setOutcomeFilter('all');
+                setReasonFilter('all');
+                setPlatformFilter('all');
+              }}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition-colors"
+            >
+              Clear All Filters
             </button>
           </div>
         ) : (

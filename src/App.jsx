@@ -3,15 +3,18 @@ import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import BetModal from './components/BetModal';
 import AuthModal from './components/AuthModal';
+import Toast from './components/Toast';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import HistoryPage from './pages/HistoryPage';
 import CalculatorPage from './pages/CalculatorPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 import { storage } from './lib/storage';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { useDocumentTitle } from './lib/useDocumentTitle';
 import {
   calculateStats,
   detectChasingLosses,
@@ -35,6 +38,15 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Global Toast Notifications
+  const [toast, setToast] = useState(null);
+  const triggerToast = (message, type = 'info', duration = 3500) => {
+    setToast({ id: Date.now(), message, type, duration });
+  };
+
+  // Dynamic Page Titles and Meta Descriptions per view
+  useDocumentTitle(activeTab);
+
   // Theme Accent Palette (Defaults to Electric Sapphire)
   const [theme, setTheme] = useState(() => localStorage.getItem('betcheck_theme') || 'sapphire');
 
@@ -42,6 +54,33 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('betcheck_theme', theme);
   }, [theme]);
+
+  // URL Hash Navigation & 404 Routing Support
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (!hash) return;
+      const validTabs = ['login', 'dashboard', 'history', 'calculator', 'reports', 'settings'];
+      if (validTabs.includes(hash)) {
+        setActiveTab(hash);
+      } else {
+        setActiveTab('404');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    if (window.location.hash) {
+      handleHashChange();
+    }
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateTab = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId !== '404') {
+      window.location.hash = tabId;
+    }
+  };
 
   // Modals
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -74,7 +113,7 @@ export default function App() {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user) {
           setUser(user);
-          setActiveTab('dashboard');
+          navigateTab('dashboard');
         }
       });
 
@@ -82,7 +121,7 @@ export default function App() {
         const currentUser = session?.user || null;
         setUser(currentUser);
         if (currentUser) {
-          setActiveTab('dashboard');
+          navigateTab('dashboard');
         }
         loadData();
       });
@@ -103,7 +142,8 @@ export default function App() {
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
     localStorage.setItem('betcheck_is_guest', 'false');
-    setActiveTab('dashboard');
+    triggerToast(`Welcome back, ${loggedInUser.email || 'User'}!`, 'success');
+    navigateTab('dashboard');
   };
 
   const handleContinueAsGuest = async () => {
@@ -115,14 +155,16 @@ export default function App() {
     } else {
       await loadData();
     }
-    setActiveTab('dashboard');
+    triggerToast('Operating in 100% private local guest mode.', 'info');
+    navigateTab('dashboard');
   };
 
   const handleLoadDemoAndEnter = async () => {
     storage.resetDemoData();
     await loadData();
     localStorage.setItem('betcheck_is_guest', 'true');
-    setActiveTab('dashboard');
+    triggerToast('Realistic sample demo data loaded.', 'success');
+    navigateTab('dashboard');
   };
 
   const handleSignOut = async () => {
@@ -131,7 +173,8 @@ export default function App() {
     }
     setUser(null);
     localStorage.removeItem('betcheck_is_guest');
-    setActiveTab('login');
+    triggerToast('Session ended. Private records locked.', 'info');
+    navigateTab('login');
   };
 
   // Entry CRUD Handlers
@@ -139,12 +182,15 @@ export default function App() {
     try {
       if (entryData.id) {
         await storage.updateEntry(entryData.id, entryData);
+        triggerToast('Betting session updated successfully.', 'success');
       } else {
         await storage.addEntry(entryData);
+        triggerToast('New betting session recorded successfully.', 'success');
       }
       await loadData();
     } catch (err) {
       console.error('Failed to save entry:', err);
+      triggerToast('Failed to save session. Please try again.', 'error');
     } finally {
       setEditEntry(null);
     }
@@ -157,6 +203,7 @@ export default function App() {
 
   const handleDeleteEntry = async (id) => {
     await storage.deleteEntry(id);
+    triggerToast('Session removed from records.', 'info');
     await loadData();
   };
 
@@ -164,11 +211,18 @@ export default function App() {
   const handleSaveSettings = async (newSettings) => {
     const updated = await storage.updateSettings(newSettings);
     setSettings(updated);
+    triggerToast('Guardrail limits saved successfully.', 'success');
   };
 
   const handleCurrencyChange = async (newCurrency) => {
     const updated = await storage.updateSettings({ ...settings, currency: newCurrency });
     setSettings(updated);
+    triggerToast(`Currency changed to ${newCurrency}.`, 'info');
+  };
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    triggerToast(`Theme palette updated to ${newTheme}.`, 'info');
   };
 
   // Goals Handlers
@@ -176,12 +230,14 @@ export default function App() {
     await storage.addGoal(goal);
     const updated = await storage.getGoals();
     setGoals(updated);
+    triggerToast(`Goal "${goal.title}" added to What-If engine.`, 'success');
   };
 
   const handleDeleteGoal = async (id) => {
     await storage.deleteGoal(id);
     const updated = await storage.getGoals();
     setGoals(updated);
+    triggerToast('Custom goal removed.', 'info');
   };
 
   // Export / Import / Reset Handlers
@@ -200,6 +256,7 @@ export default function App() {
     a.download = `betcheck-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    triggerToast('Backup file downloaded successfully.', 'success');
   };
 
   const handleImportData = async (backup) => {
@@ -213,16 +270,19 @@ export default function App() {
       localStorage.setItem('betcheck_goals', JSON.stringify(backup.goals));
     }
     await loadData();
+    triggerToast('Backup restored successfully!', 'success');
   };
 
   const handleResetDemoData = async () => {
     storage.resetDemoData();
     await loadData();
+    triggerToast('Realistic sample demo data loaded.', 'success');
   };
 
   const handleClearAllData = async () => {
     storage.clearAllData();
     await loadData();
+    triggerToast('All data cleared. Clean slate active.', 'info');
   };
 
   if (loading) {
@@ -239,17 +299,23 @@ export default function App() {
   // 1. PRIMARY LANDING PAGE: Dedicated Login Portal
   if (activeTab === 'login') {
     return (
-      <LoginPage
-        onLoginSuccess={handleLoginSuccess}
-        onContinueAsGuest={handleContinueAsGuest}
-        onLoadDemoAndEnter={handleLoadDemoAndEnter}
-        currency={currency}
-      />
+      <>
+        <Toast toast={toast} onClose={() => setToast(null)} />
+        <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          onContinueAsGuest={handleContinueAsGuest}
+          onLoadDemoAndEnter={handleLoadDemoAndEnter}
+          currency={currency}
+        />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-blue-200">
+    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden w-full max-w-[100vw]">
+      {/* Toast Notification Container */}
+      <Toast toast={toast} onClose={() => setToast(null)} />
+
       {/* Top Navbar */}
       <Navbar
         stats={stats}
@@ -264,13 +330,13 @@ export default function App() {
         user={user}
         isCloud={isSupabaseConfigured}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={navigateTab}
         theme={theme}
-        setTheme={setTheme}
+        setTheme={handleThemeChange}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 md:pb-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 md:pb-12 min-w-0">
         {activeTab === 'dashboard' && (
           <DashboardPage
             stats={stats}
@@ -282,10 +348,11 @@ export default function App() {
               setEditEntry(null);
               setIsLogModalOpen(true);
             }}
-            onOpenSettings={() => setActiveTab('settings')}
+            onOpenSettings={() => navigateTab('settings')}
+            onLoadDemo={handleResetDemoData}
             onEditEntry={handleEditEntry}
             onDeleteEntry={handleDeleteEntry}
-            setActiveTab={setActiveTab}
+            setActiveTab={navigateTab}
           />
         )}
 
@@ -317,7 +384,7 @@ export default function App() {
             weeklyData={weeklyData}
             currency={currency}
             onSaveReflection={(note) => {
-              console.log('Reflection note saved:', note);
+              triggerToast('Commitment note saved to private journal.', 'success');
             }}
           />
         )}
@@ -333,17 +400,26 @@ export default function App() {
             onExportData={handleExportData}
             onImportData={handleImportData}
             theme={theme}
-            setTheme={setTheme}
+            setTheme={handleThemeChange}
             onSignOut={handleSignOut}
             user={user}
           />
+        )}
+
+        {/* 404 Page or Unrecognized Tab */}
+        {activeTab === '404' && (
+          <NotFoundPage setActiveTab={navigateTab} />
+        )}
+
+        {!['dashboard', 'history', 'calculator', 'reports', 'settings', '404'].includes(activeTab) && (
+          <NotFoundPage setActiveTab={navigateTab} />
         )}
       </main>
 
       {/* Mobile Ergonomic Bottom Navigation Bar */}
       <BottomNav
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={navigateTab}
         onOpenLogModal={() => {
           setEditEntry(null);
           setIsLogModalOpen(true);

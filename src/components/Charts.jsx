@@ -60,9 +60,9 @@ export function CumulativeLossChart({ entries = [], currency = 'NGN' }) {
         </span>
       </div>
 
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[420px]">
-          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-40 overflow-visible">
+      <div className="w-full overflow-hidden">
+        <div className="w-full min-w-0">
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-40 overflow-visible" preserveAspectRatio="none">
             <defs>
               <linearGradient id="lossGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#EF4444" stopOpacity="0.35" />

@@ -4,6 +4,7 @@ import MetricCard from '../components/MetricCard';
 import StreakBanner from '../components/StreakBanner';
 import ChasingLossAlert from '../components/ChasingLossAlert';
 import LimitsTracker from '../components/LimitsTracker';
+import EmptyState from '../components/EmptyState';
 import { CumulativeLossChart, PlatformBreakdown, ReasonBreakdown } from '../components/Charts';
 import { formatCurrency } from '../lib/calculations';
 
@@ -11,12 +12,25 @@ export default function DashboardPage({
   stats,
   chasingData,
   limitsData,
-  entries,
+  entries = [],
   currency = 'NGN',
   onOpenLogModal,
   onOpenSettings,
+  onLoadDemo,
   setActiveTab,
 }) {
+  if (!entries || entries.length === 0) {
+    return (
+      <div className="space-y-6 pb-20 md:pb-10">
+        <EmptyState
+          onOpenLogModal={onOpenLogModal}
+          onLoadDemo={onLoadDemo}
+          onOpenSettings={onOpenSettings}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-20 md:pb-10">
       {/* 1. Chasing Losses Alert Banner (Appears whenever pattern is detected) */}

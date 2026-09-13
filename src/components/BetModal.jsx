@@ -209,9 +209,12 @@ export default function BetModal({
                   step="any"
                   min="0"
                   required
-                  placeholder="e.g. 5000"
+                  placeholder="Stake amount"
                   value={amountStaked}
-                  onChange={(e) => setAmountStaked(e.target.value)}
+                  onChange={(e) => {
+                    setError('');
+                    setAmountStaked(e.target.value);
+                  }}
                   className="w-full bg-slate-900/90 text-white pl-8 pr-3 py-2 rounded-xl border border-slate-800 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
@@ -231,9 +234,12 @@ export default function BetModal({
                     step="any"
                     min="0"
                     required
-                    placeholder="e.g. 12500"
+                    placeholder="Total payout amount"
                     value={amountReturned}
-                    onChange={(e) => setAmountReturned(e.target.value)}
+                    onChange={(e) => {
+                      setError('');
+                      setAmountReturned(e.target.value);
+                    }}
                     className="w-full bg-slate-900/90 text-white pl-8 pr-3 py-2 rounded-xl border border-slate-800 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
@@ -319,7 +325,7 @@ export default function BetModal({
             </label>
             <textarea
               rows={2}
-              placeholder="What were you feeling right before placing this? (e.g. Scrolled social media, argued with someone, felt broke)"
+              placeholder="What triggered this bet? (e.g. Felt bored, saw social media slip, wanted to make fast cash)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full bg-slate-900/90 text-white px-3 py-2 rounded-xl border border-slate-800 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder:text-slate-600 resize-none"

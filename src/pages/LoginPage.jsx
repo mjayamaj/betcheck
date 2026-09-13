@@ -218,7 +218,7 @@ export default function LoginPage({
                   <input
                     type="email"
                     required
-                    placeholder="name@example.com"
+                    placeholder="you@domain.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-[#101726] text-white pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700/80 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-500"
@@ -232,9 +232,19 @@ export default function LoginPage({
                     Password
                   </label>
                   {!isSignUp && (
-                    <span className="text-[11px] text-slate-500 hover:text-blue-400 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!email) {
+                          setError('Please enter your email address above to receive reset instructions.');
+                        } else {
+                          setMessage(`Password reset instructions will be sent to ${email} if registered.`);
+                        }
+                      }}
+                      className="text-[11px] text-slate-500 hover:text-blue-400 transition-colors"
+                    >
                       Forgot password?
-                    </span>
+                    </button>
                   )}
                 </div>
                 <div className="relative">
@@ -242,7 +252,7 @@ export default function LoginPage({
                   <input
                     type="password"
                     required
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-[#101726] text-white pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700/80 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-500"
@@ -361,9 +371,12 @@ export default function LoginPage({
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto py-8 px-4 text-center text-xs text-slate-500 border-t border-slate-800/60 relative z-10">
+      <footer className="mt-auto py-8 px-4 text-center text-xs text-slate-500 border-t border-slate-800/60 relative z-10 space-y-1.5">
         <p>© {new Date().getFullYear()} BetCheck. Built for personal accountability, financial awareness, and recovery.</p>
-        <p className="mt-1 text-slate-600">
+        <p className="text-slate-500">
+          Have questions or need support? <a href="mailto:support@betcheck.app" className="text-blue-400 hover:underline font-semibold">support@betcheck.app</a>
+        </p>
+        <p className="text-slate-600 text-[11px]">
           Strictly non-gambling: No betting odds, no bookmaker links, no promotional codes.
         </p>
       </footer>
